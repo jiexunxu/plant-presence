@@ -42,6 +42,8 @@ The `figures` subfolder stores the bar graph used in the paper. These bar graphs
 
 We included a select few results in the `selected_results.zip` archive, but we cannot include everything because they'd be too big (over 600MB with all results from the paper, even when compressed) for a repo.
 
+However, the Docker image we provided contains the full results inside `results.zip`. Feel free to explore within the Docker image.
+
 ### `src` folder
 
 The `src` folder contains our source code that generates the experimental results in the paper. The two sets of experiments presented in the paper draft are run through
@@ -62,5 +64,16 @@ docker build -t jiexunxu1/plant-presence:latest .
 
 To push to dockerhub, run
 ```
+docker login 
+[Provide login credentials on command line]
+```
+Followed up
+```
 docker push jiexunxu1/plant-presence:latest
 ```
+
+To run this image in detached mode, run
+```
+docker run -d jiexunxu1/plant-presence:latest
+```
+Then you can interact with it in Docker Desktop (if available), or find the running process with `docker ps` and exec into it
