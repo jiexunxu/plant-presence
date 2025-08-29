@@ -30,6 +30,8 @@ It also contains maxent predictions of all species seperately to evaluate maxent
 
 Please extract the `data.zip` to obtain the data files used in our experiments.
 
+We cannot include the original raw data as they are over 1G, too big for a repo.
+
 ### `Results` Folder
 
 The `results` folder stores prediction results of our various approaches detailed in the paper draft.
@@ -37,6 +39,8 @@ The `results` folder stores prediction results of our various approaches detaile
 Each file stores the scores (from 0-1) of presence probabilities, for all species across all data. When evaluating, we only take the rows that represents sequestered data.
 
 The `figures` subfolder stores the bar graph used in the paper. These bar graphs are also generated when running the scripts at the end.
+
+We included a select few results in the `selected_results.zip` archive, but we cannot include everything because they'd be too big (over 600MB with all results from the paper, even when compressed) for a repo.
 
 ### `src` folder
 
