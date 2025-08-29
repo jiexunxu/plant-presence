@@ -2,13 +2,14 @@ from os.path import exists
 import xgboost as xgb
 import pandas as pd
 import pathlib
+import numpy as np
 
 
 class XGBoostModel:
     BASE_DIR = pathlib.Path(__file__).parent.parent.parent.resolve()
     RESULTS_DATA_DIR = f'{BASE_DIR}/results/'
 
-    def train_evaluate_and_output(self, training_data, training_labels, test_data, output_csv, format='regular', params=None):
+    def train_evaluate_and_output(self, training_data, training_labels, test_data, output_csv, format='regular', params=None, presence_only_df=None):
         if exists(f'{self.RESULTS_DATA_DIR}{output_csv}'):
             print(f'XGBoost: Result file {output_csv} already exists, skipping...')
             return
@@ -25,8 +26,14 @@ class XGBoostModel:
         full_data = pd.concat([training_data, test_data], axis=0, ignore_index=True).astype(float)
         presence_probabilities = model.predict_proba(full_data)
         if format == 'regular':
-            pd.DataFrame(presence_probabilities).to_csv(f'{self.RESULTS_DATA_DIR}{output_csv}', index=False, header=False, float_format='%.5f')
-        elif format == 'GLC2023':
+            if output_csv.endswith('.csv'):
+                output_csv = output_csv[:-4]
+            df = pd.DataFrame(presence_probabilities)
+            df.to_csv(f'{self.RESULTS_DATA_DIR}{output_csv}.csv', index=False, header=False, float_format='%.5f')
+            if presence_only_df is not None:
+                df.iloc[:, :] = np.where(presence_only_df.values == 1, 1.0, df.values)
+                df.to_csv(f'{self.RESULTS_DATA_DIR}{output_csv}_with_po.csv', index=False, header=False, float_format='%.5f')
+        elif format == 'GLC2023_Chanllege_Only':
             presence_probabilities = presence_probabilities[training_data.shape[0]:, :]
             presence_probabilities[presence_probabilities >= 0.5] = 1
             presence_probabilities[presence_probabilities < 0.5] = 0
@@ -37,3 +44,5 @@ class XGBoostModel:
             result = result.reset_index().drop(columns=['index'])
             result.insert(loc=0, column="Id", value=result.reset_index().index+1)
             result.to_csv(f'{self.RESULTS_DATA_DIR}{output_csv}', index=False, header=['Id', 'Predicted'])
+        else:
+            raise ValueError(f"Unknown data format: {format}")

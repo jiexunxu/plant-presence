@@ -1,7 +1,6 @@
 import random
 import pickle
 import numpy as np
-import pandas as pd
 from scipy.sparse import csr_matrix
 import pathlib
 
@@ -18,7 +17,6 @@ class GbifParser:
         self.processed_data_filename = processed_data_filename
         self.raw_env_filename = raw_env_filename
         self.top_species_percent = top_species_percent
-
 
     def generate_training_data(self, interaction_matrix, species_counts, top_species_idx, full_env_data):
             storage = dict()

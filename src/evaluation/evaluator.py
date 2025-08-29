@@ -37,23 +37,11 @@ class Evaluator:
             raise Exception(f'Predictions dimension {predictions.shape} and ground truths dimension {ground_truths.shape} does not match!')
         [unique, counts] = np.unique(predictions.to_numpy().flatten() + ground_truths.to_numpy().flatten(), return_counts=True)
         prediction_results = dict(zip(unique, counts))
-        true_negative = prediction_results[-11]
-        false_negative = prediction_results[-9]
-        false_positive  = prediction_results[9]
-        true_positive = prediction_results[11]
+        true_negative = prediction_results.get(-11, 0)
+        false_negative = prediction_results.get(-9, 0)
+        false_positive  = prediction_results.get(9, 0)
+        true_positive = prediction_results.get(11, 0)
 
-        df = pd.DataFrame(predictions.to_numpy()+ground_truths.to_numpy())
-        true_negatives_per_row = df[df==-11].sum(axis=1) / -11
-        false_negatives_per_row = df[df==-9].sum(axis=1) / -9
-        false_positives_per_row  = df[df==9].sum(axis=1) / 9
-        true_positives_per_row = df[df==11].sum(axis=1) / 11
-
-        precisions_per_row = true_positives_per_row / (true_positives_per_row + false_negatives_per_row)
-        recalls_per_row = true_positives_per_row / (true_positives_per_row + false_positives_per_row)
-        f1_scores_per_row = 2 * precisions_per_row * recalls_per_row / (precisions_per_row + recalls_per_row)
-        f1_scores_per_row = f1_scores_per_row.fillna(0)
-        average_f1_scores_per_row = f1_scores_per_row.mean()
-  
         accuracy = self._round_division(true_positive + true_negative, true_positive + true_negative + false_positive + false_negative  )
         precision = self._round_division(true_positive, true_positive + false_positive)
         recall = self._round_division(true_positive, true_positive + false_negative)
@@ -62,7 +50,27 @@ class Evaluator:
         f1_score = self._round_division(2 * precision * recall, precision + recall)
         print(f'True Positives: {true_positive}, False Positives: {false_positive}, True Negatives: {true_negative}, False Negatives: {false_negative}, Total: {true_positive + false_positive + true_negative + false_negative}')
         print(f'Accuracy: {accuracy}, Precision: {precision}, Recall: {recall}, Specificity: {specificity}, F1 (Dice) Score: {f1_score}, Jaccard Similarity: {jaccard_similarity}')
-        return f1_scores_per_row
+
+    def calculate_histogram_scores(self, predictions, ground_truths, histogram_size):
+        f1_scores = []
+        species_count = len(predictions.columns)
+        for i in range(0, species_count, histogram_size):
+            histogram_idx = list(range(i, min(i + histogram_size, species_count)))
+            predictions_histogram = predictions.iloc[:, histogram_idx]
+            ground_truths_histogram = ground_truths.iloc[:, histogram_idx]
+            [unique, counts] = np.unique(predictions_histogram.to_numpy().flatten() + ground_truths_histogram.to_numpy().flatten(), return_counts=True)
+            prediction_results = dict(zip(unique, counts))
+            true_negative = prediction_results.get(-11, 0)
+            false_negative = prediction_results.get(-9, 0)
+            false_positive  = prediction_results.get(9, 0)
+            true_positive = prediction_results.get(11, 0)
+            precision = self._round_division(true_positive, true_positive + false_positive)
+            recall = self._round_division(true_positive, true_positive + false_negative)
+            f1_score = self._round_division(2 * precision * recall, precision + recall)
+            f1_scores.append(f1_score)
+        
+        return f1_scores
+
 
     def p_value_test(self, n1, n2, num_iterations = 10000):
         ndiff = sum([ n1[i]-n2[i] for i in range(len(n1)) ])

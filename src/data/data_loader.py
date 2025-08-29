@@ -12,13 +12,21 @@ class DataLoader:
         self.feature_columns = feature_columns
         self.presence_data_offset = presence_data_offset
 
-    def load_maxent_predictions(self, data_start, data_end, maxent_filename, ignored_species=None):
+    def load_presence_only_data(self, input_po_file='glc23_presence_only_all_species.csv'):
+        po_df = pd.read_csv(f'{self.RAW_DATA_DIR}{input_po_file}', sep=';')
+        po_df = po_df.iloc[:, 1:]
+        return po_df
+
+    def load_maxent_predictions(self, data_start, data_end, maxent_filename, ignored_species=None, considered_species=None):
         maxent_predictions = pd.read_csv(f'{self.RAW_DATA_DIR}{maxent_filename}', sep=';')
         ground_truth = self.gbif_env_presence_data.iloc[data_start:data_end, self.presence_data_offset:]
         maxent_predictions[maxent_predictions > 0.5] = 10
         maxent_predictions[maxent_predictions <= 0.5] = -10
         maxent_predictions = maxent_predictions.astype('int8')
-        if ignored_species != None:
+        if considered_species is not None:
+            maxent_predictions = maxent_predictions.iloc[:, considered_species]
+            ground_truth = ground_truth.iloc[:, considered_species]
+        elif ignored_species != None:
             maxent_predictions.drop(maxent_predictions.columns[ignored_species],axis=1,inplace=True)
             ground_truth.drop(ground_truth.columns[ignored_species],axis=1,inplace=True)
 
