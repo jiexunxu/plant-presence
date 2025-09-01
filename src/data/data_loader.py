@@ -57,7 +57,9 @@ class DataLoader:
         species_presence_count = all_labels.sum(axis=0).reset_index(drop=True).sort_values(ascending=False)
         top_species_idx = species_presence_count.head(top_species_list_threshold).index.to_list()
         top_species_ids = all_labels.columns[top_species_idx].to_list
-        return { 'top_species_idx': top_species_idx, 'top_species_ids': top_species_ids }
+        return { 'top_species_idx': top_species_idx, 
+                 'top_species_ids': top_species_ids, 
+                 'top_species_presence_precent': species_presence_count.head(top_species_list_threshold) / len(self.gbif_env_presence_data) * 100 }
 
     def _split_feature_and_label(self, df, description='', species_idx_as_feature=[], use_maxent=False, maxent_data=None):
         features = df.iloc[:, self.feature_columns]
